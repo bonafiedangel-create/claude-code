@@ -147,14 +147,13 @@
       "category": "security"
     },
     {
-      "name": "yt-toolkit",
-      "description": "Transcript-driven YouTube editing tools: dead-air cuts, chapters, retention diagnosis, and hook scoring",
-      "version": "0.1.0",
+      "name": "youtube-agent",
+      "description": "Eleven skills that run a YouTube channel end to end: scripts and hook scoring, titles and thumbnails, editing, chapters, retention diagnosis, Shorts, SEO, comments, planning, competitor research, and channel audits",
+      "version": "1.0.0",
       "author": {
-        "name": "bonafiedangel",
-        "email": "bonafiedangel@yahoo.com"
+        "name": "Jake Schincariol"
       },
-      "source": "./plugins/yt-toolkit",
+      "source": "./plugins/youtube-agent",
       "category": "productivity"
     }
   ]

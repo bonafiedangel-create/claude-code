@@ -17,7 +17,7 @@ all. Treat a low score as a reason to look again, never a high score as a promis
 import json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FORMULAS = json.load(open(os.path.join(HERE, "hooks.json")))["hooks"]
+FORMULAS = json.load(open(os.path.join(HERE, "..", "..", "..", "lib", "hooks.json")))["hooks"]
 
 FILLER = {"basically","actually","literally","just","really","very","so","kind","sort","like",
           "guys","hey","welcome","today","video","subscribe","channel"}

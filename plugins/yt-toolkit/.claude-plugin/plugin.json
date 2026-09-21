@@ -1,0 +1,9 @@
+{
+  "name": "yt-toolkit",
+  "version": "0.1.0",
+  "description": "Transcript-driven YouTube editing tools: dead-air cuts, chapters, retention diagnosis, and hook scoring",
+  "author": {
+    "name": "bonafiedangel",
+    "email": "bonafiedangel@yahoo.com"
+  }
+}

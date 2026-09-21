@@ -145,6 +145,17 @@
       },
       "source": "./plugins/security-guidance",
       "category": "security"
+    },
+    {
+      "name": "yt-toolkit",
+      "description": "Transcript-driven YouTube editing tools: dead-air cuts, chapters, retention diagnosis, and hook scoring",
+      "version": "0.1.0",
+      "author": {
+        "name": "bonafiedangel",
+        "email": "bonafiedangel@yahoo.com"
+      },
+      "source": "./plugins/yt-toolkit",
+      "category": "productivity"
     }
   ]
 }

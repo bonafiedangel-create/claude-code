@@ -4,7 +4,9 @@ Eleven skills that run a YouTube channel. Adapted from
 [Jake Schincariol's `youtube-agent-skill`](https://github.com/Jakeschincariol/youtube-agent-skill)
 (MIT, see [LICENSE](LICENSE)) and repackaged here as a Claude Code plugin: each skill moved into
 `skills/<name>/SKILL.md` + `scripts/`, and the two things the original scripts duplicated per file -
-the transcript parser and the 21-formula hook library - pulled into one shared `lib/`.
+the transcript parser and the 21-formula hook library - pulled into one shared `lib/`. This fork is
+maintained by Marilene & Co (Marileneandco@gmail.com) for personal use - see
+[NOTICE.md](NOTICE.md) for the full attribution split between upstream and this fork.
 
 One skill writes your script off 21 hook formulas and scores the hook before you waste a take on
 it. One lints the title and the thumbnail as a single pairing, because writing them separately is
@@ -80,6 +82,8 @@ touches your credentials.
 **Nothing invents a number.** If a skill wants a figure it does not have, it asks you for it or
 writes the line without it.
 
-## Licence
+## Licence and attribution
 
-MIT, inherited from the upstream project - see [LICENSE](LICENSE). Use it, change it, ship it.
+MIT, inherited from the upstream project - see [LICENSE](LICENSE) for the original notice and
+[NOTICE.md](NOTICE.md) for exactly what's upstream versus what changed in this fork. Use it, change
+it, ship it - the one MIT condition is that the original notice travels with the code.

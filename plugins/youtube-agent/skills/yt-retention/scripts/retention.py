@@ -59,7 +59,7 @@ def main():
     cliffs = [{"from": round(a1, 2), "to": round(b1, 2), "lost": round(d, 2),
                "at_seconds": round(at(a1), 1) if (not pct_axis or dur) else None}
               for _, a1, b1, d in drops[:5] if d > 0.8]
-    mid = [d for d, x0, _, _ in [(r[0], r[1], r[2], r[3]) for r in drops] if x0 > cutoff]
+    mid = [d for d, x0, _, _ in drops if x0 > cutoff]
     slide = sum(mid) / len(mid) if mid else 0
     said = {}
     if tr and os.path.exists(tr):

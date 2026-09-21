@@ -148,10 +148,11 @@
     },
     {
       "name": "youtube-agent",
-      "description": "Eleven skills that run a YouTube channel end to end: scripts and hook scoring, titles and thumbnails, editing, chapters, retention diagnosis, Shorts, SEO, comments, planning, competitor research, and channel audits",
-      "version": "1.0.0",
+      "description": "Eleven skills that run a YouTube channel end to end: scripts and hook scoring, titles and thumbnails, editing, chapters, retention diagnosis, Shorts, SEO, comments, planning, competitor research, and channel audits. A personal fork of Jake Schincariol's youtube-agent-skill (MIT) - see NOTICE.md",
+      "version": "1.0.1",
       "author": {
-        "name": "Jake Schincariol"
+        "name": "Marilene & Co",
+        "email": "Marileneandco@gmail.com"
       },
       "source": "./plugins/youtube-agent",
       "category": "productivity"

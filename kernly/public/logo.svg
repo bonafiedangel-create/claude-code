@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" width="260" height="64" role="img" aria-label="Kernly">
-  <rect width="64" height="64" rx="18" fill="#ff5b1f"/>
-  <g fill="none" stroke="#fff8ef" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M23 15v34"/><path d="M42 20 23 35"/><path d="M30 31l14 18"/>
-  </g>
-  <circle cx="47" cy="17" r="4" fill="#15121a"/>
-  <text x="80" y="46" font-family="'Inter Tight', Inter, system-ui, sans-serif" font-weight="800" font-size="44" letter-spacing="-2.2" fill="#15121a">kernly<tspan fill="#ff5b1f">.</tspan></text>
-</svg>

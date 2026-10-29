@@ -1,4 +1,4 @@
-# kernly.
+# Brand Studio (working title)
 
 Make it look like you. Carousels, single posts and decks in your own brand: pick colours,
 fonts, a signature detail and a voice once, and every slide after that is on-brand.
@@ -10,7 +10,7 @@ projects, clean (no watermark) PNG/PDF/ZIP export, AI copy and tone rewrites are
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173 — "Dev only: unlock Pro" button appears in the paywall
+npm run dev        # http://localhost:5173  (set VITE_APP_NAME=YourName to rename the product everywhere) — "Dev only: unlock Pro" button appears in the paywall
 npm run build
 ```
 
@@ -19,7 +19,7 @@ The AI and checkout endpoints live in `api/` and run as Vercel serverless functi
 
 ## Deploy (about 15 minutes)
 
-1. Push the repo, import it in Vercel, set the root directory to `kernly`.
+1. Push the repo, import it in Vercel, set the root directory to `kernly` (this folder; rename it freely).
 2. In Stripe create products and recurring prices, then add them as env vars (see `.env.example`):
 
    | Plan   | Monthly | Yearly (per month) | Target audience |
@@ -41,9 +41,11 @@ The AI and checkout endpoints live in `api/` and run as Vercel serverless functi
 
 ## Structure
 
-- `src/styles.tsx` — the 6 visual styles (add one by adding an object)
-- `src/SlideView.tsx` — the 7 slide layouts, signature rendering, stair and growth charts
+- `src/styles.tsx` — the 9 visual styles (add one by adding an object)
+- `src/SlideView.tsx` — the 9 slide layouts (cover, point, list, steps, stat, quote, compare, chart, cta), signature rendering, stair and growth charts
 - `src/ai.ts` — AI writing with offline fallback
 - `src/export.ts` — PNG, ZIP, PDF
 - `api/` — `write`, `rewrite`, `checkout`, `verify`
-- `public/logo.svg`, `public/logo-mark.svg` — identity
+- `src/config.ts` — the product name and tagline (single source of truth)
+- `src/templates.ts` — the template gallery (10 starters; add one by adding an object)
+- `src/Logo.tsx` — placeholder mark; replace with the real logo once the name is final

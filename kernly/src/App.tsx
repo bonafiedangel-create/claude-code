@@ -4,13 +4,14 @@ import { DEFAULT_BRAND } from './brand';
 import { EXAMPLES } from './examples';
 import { getStyle } from './styles';
 import { Scaled, SlideView } from './SlideView';
-import { BrandPanel, StylePanel, WritePanel } from './Panels';
+import { BrandPanel, StylePanel, TemplatesPanel, WritePanel } from './Panels';
+import { Template, buildDoc } from './templates';
 import { Paywall } from './Paywall';
 import { Wordmark } from './Logo';
 import { exportAll, exportPng } from './export';
 import { loadBrands, loadDocs, loadPlan, saveBrands, saveDocs, savePlan } from './store';
 
-type Tab = 'write' | 'style' | 'brand';
+type Tab = 'templates' | 'write' | 'style' | 'brand';
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 export function App() {
@@ -19,7 +20,7 @@ export function App() {
   const [saved, setSaved] = useState<Doc[]>(() => (loadPlan() === 'free' ? [] : loadDocs()));
   const [doc, setDoc] = useState<Doc>(() => structuredClone(EXAMPLES[0]));
   const [active, setActive] = useState(0);
-  const [tab, setTab] = useState<Tab>('write');
+  const [tab, setTab] = useState<Tab>('templates');
   const [note, setNote] = useState('');
   const [gate, setGate] = useState<string | null>(null);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
@@ -98,6 +99,13 @@ export function App() {
     setDoc({ id: uid(), title: 'Untitled', format: 'carousel', styleId: doc.styleId, brandId: brand.id, slides: [{ kind: 'cover', title: 'Your first *headline*', body: 'Write a topic on the left and hit “Write it”.' }], updatedAt: Date.now() });
     setActive(0);
     setTab('write');
+  };
+
+  const openTemplate = (t: Template, topic: string) => {
+    setDoc(buildDoc(t, topic, brand));
+    setActive(0);
+    setTab('write');
+    toast(`${t.name} opened. Edit the text, restyle it, or change your brand.`);
   };
 
   const openExample = (ex: Doc) => {
@@ -182,14 +190,14 @@ export function App() {
           <input className="title-input" value={doc.title} onChange={(e) => patchDoc({ title: e.target.value })} aria-label="Project title" />
           {slide ? (
             <Scaled w={fmt.w} h={fmt.h} maxWidth={`min(100%, calc(66vh * ${fmt.w / fmt.h}))`}>
-              <SlideView slide={slide} brand={brand} style={style} index={Math.min(active, doc.slides.length - 1)} total={doc.slides.length} w={fmt.w} h={fmt.h} format={doc.format} watermark={!paid} />
+              <SlideView slide={slide} brand={brand} style={style} index={Math.min(active, doc.slides.length - 1)} total={doc.slides.length} w={fmt.w} h={fmt.h} format={doc.format} watermark={!paid} docImage={doc.image} />
             </Scaled>
           ) : null}
           <div className="strip" role="tablist" aria-label="Slides">
             {thumbs.map((s, i) => (
               <button key={i} role="tab" aria-selected={i === active} className={'thumb' + (i === active ? ' on' : '')} style={{ width: doc.format === 'deck' ? 120 : 76 }} onClick={() => setActive(i)}>
                 <Scaled w={fmt.w} h={fmt.h}>
-                  <SlideView slide={s} brand={brand} style={style} index={i} total={thumbs.length} w={fmt.w} h={fmt.h} format={doc.format} watermark={false} />
+                  <SlideView slide={s} brand={brand} style={style} index={i} total={thumbs.length} w={fmt.w} h={fmt.h} format={doc.format} watermark={false} docImage={doc.image} />
                 </Scaled>
               </button>
             ))}
@@ -203,13 +211,15 @@ export function App() {
 
         <aside className="panel">
           <nav className="tabs" role="tablist">
-            {(['write', 'style', 'brand'] as Tab[]).map((t) => (
+            {(['templates', 'write', 'style', 'brand'] as Tab[]).map((t) => (
               <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
-                {t === 'write' ? 'Write' : t === 'style' ? 'Style' : 'Brand'}
+                {t === 'templates' ? 'Templates' : t === 'write' ? 'Write' : t === 'style' ? 'Style' : 'Brand'}
               </button>
             ))}
           </nav>
-          {tab === 'write' ? (
+          {tab === 'templates' ? (
+            <TemplatesPanel brand={brand} doc={doc} open={openTemplate} hasWork={saved.every((d) => d.id !== doc.id) && !doc.id.startsWith('ex-')} />
+          ) : tab === 'write' ? (
             <WritePanel doc={doc} brand={brand} plan={plan} active={Math.min(active, doc.slides.length - 1)} setActive={setActive} patchDoc={patchDoc} patchSlide={patchSlide} setSlides={setSlides} toast={toast} onGate={requirePaid} />
           ) : tab === 'style' ? (
             <StylePanel doc={doc} brand={brand} patchDoc={patchDoc} />
@@ -223,7 +233,7 @@ export function App() {
         <div ref={exportRef} className="offscreen" aria-hidden="true">
           {doc.slides.map((s, i) => (
             <div key={i} data-ex={i} style={{ width: fmt.w, height: fmt.h }}>
-              <SlideView slide={s} brand={brand} style={style} index={i} total={doc.slides.length} w={fmt.w} h={fmt.h} format={doc.format} watermark={!paid} />
+              <SlideView slide={s} brand={brand} style={style} index={i} total={doc.slides.length} w={fmt.w} h={fmt.h} format={doc.format} watermark={!paid} docImage={doc.image} />
             </div>
           ))}
         </div>

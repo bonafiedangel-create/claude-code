@@ -1,6 +1,6 @@
 import { Req, Res, claude, limited } from './_ai';
 
-const KINDS = ['cover', 'point', 'list', 'steps', 'stat', 'quote', 'cta'];
+const KINDS = ['cover', 'point', 'list', 'steps', 'stat', 'quote', 'compare', 'chart', 'cta'];
 const COUNT: Record<string, number> = { carousel: 7, post: 1, deck: 6 };
 
 const SYSTEM = `You write slide copy for social carousels, single posts and decks.
@@ -11,6 +11,8 @@ Rules:
 - Titles max 60 characters. Bodies max 140 characters. One idea per slide.
 - "steps" needs 3-5 short items (1-2 words each). "list" needs 3-5 items under 40 characters.
 - "stat" needs a punchy value like "10×" or "6h" and a short label.
+- "compare" items: first item is the headings as "Left || Right", then 3-4 rows each "left text || right text".
+- "chart" items: 3-5 entries formatted "Label: number" (plain numbers, no units). Use real-feeling but clearly illustrative figures only when the topic gives no data.
 - First slide is "cover" (a hook). Last slide is "cta" with items:["Follow <handle>"] unless it is a single post.
 - Write in the brand voice given. Concrete, specific, no filler, no emoji.`;
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Brand } from './types';
+import { Brand, Slide } from './types';
 import { alpha, mix, onDark, readableOn } from './color';
 
 export interface Theme {
@@ -17,7 +17,7 @@ export interface StyleDef {
   name: string;
   blurb: string;
   theme: (b: Brand) => Theme;
-  background: (t: Theme, w: number, h: number) => ReactNode;
+  background: (t: Theme, w: number, h: number, image?: string, slide?: Slide) => ReactNode;
   head: { weight: number; upper?: boolean; tracking: string; leading: number; font?: string };
   bodyFont?: string;
   kicker: 'plain' | 'chip' | 'prompt' | 'box';
@@ -161,6 +161,65 @@ export const STYLES: StyleDef[] = [
     ),
     head: { weight: 900, tracking: '-0.04em', leading: 0.98 },
     kicker: 'chip',
+  },
+  {
+    id: 'photo',
+    name: 'Photo Quote',
+    blurb: 'Your photo, big white type',
+    theme: (b) => ({
+      bg: '#111111',
+      fg: '#ffffff',
+      muted: 'rgba(255,255,255,0.72)',
+      accent: onDark(b.accent),
+      accentInk: readableOn(onDark(b.accent)),
+      panel: 'rgba(255,255,255,0.12)',
+      line: 'rgba(255,255,255,0.3)',
+    }),
+    background: (t, w, h, image) => (
+      <>
+        {image ? (
+          <img src={image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(160deg, ${alpha(t.accent, 0.55)}, #1a1420 70%)` }} />
+        )}
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 35%, rgba(0,0,0,0.78) 100%)`, opacity: h > 0 && w > 0 ? 1 : 0 }} />
+      </>
+    ),
+    head: { weight: 600, tracking: '-0.03em', leading: 1.04 },
+    kicker: 'plain',
+  },
+  {
+    id: 'graph',
+    name: 'Graph Paper',
+    blurb: 'Gridded, tidy, explanatory',
+    theme: (b) => ({ ...light(b), bg: mix(b.ground, b.text, 0.05) }),
+    background: (t) => (
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `linear-gradient(${alpha(t.fg, 0.07)} 2px, transparent 2px), linear-gradient(90deg, ${alpha(t.fg, 0.07)} 2px, transparent 2px), linear-gradient(${alpha(t.fg, 0.13)} 2px, transparent 2px), linear-gradient(90deg, ${alpha(t.fg, 0.13)} 2px, transparent 2px)`,
+          backgroundSize: '54px 54px, 54px 54px, 270px 270px, 270px 270px',
+        }}
+      />
+    ),
+    head: { weight: 800, tracking: '-0.04em', leading: 1.0 },
+    kicker: 'box',
+  },
+  {
+    id: 'notebook',
+    name: 'Notebook',
+    blurb: 'Ruled paper, handwritten',
+    theme: (b) => ({ ...light(b), bg: mix(b.ground, '#ffffff', 0.45) }),
+    background: (t) => (
+      <>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `repeating-linear-gradient(180deg, transparent 0 62px, ${alpha('#4a7bd0', 0.28)} 62px 64px)`, backgroundPosition: '0 30px' }} />
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 70, width: 3, background: alpha('#d8453b', 0.55) }} />
+      </>
+    ),
+    head: { weight: 700, tracking: '-0.01em', leading: 1.08, font: 'Caveat' },
+    bodyFont: 'Caveat',
+    kicker: 'plain',
   },
 ];
 

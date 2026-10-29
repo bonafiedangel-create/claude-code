@@ -1,7 +1,9 @@
 import { Brand, Doc, Plan } from './types';
 import { DEFAULT_BRAND } from './brand';
 
-const K = { brands: 'kernly:brands', docs: 'kernly:docs', plan: 'kernly:plan', session: 'kernly:session' };
+import { APP_SLUG } from './config';
+
+const K = { brands: `${APP_SLUG}:brands`, docs: `${APP_SLUG}:docs`, plan: `${APP_SLUG}:plan`, session: `${APP_SLUG}:session` };
 
 function read<T>(key: string, fallback: T): T {
   try {

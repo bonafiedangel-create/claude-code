@@ -1,7 +1,9 @@
 import { CSSProperties, ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { Brand, Format, Slide } from './types';
 import { MONO, fontStack, resolveBody } from './brand';
+import { alpha } from './color';
 import { StyleDef, Theme } from './styles';
+import { APP } from './config';
 
 interface Props {
   slide: Slide;
@@ -13,6 +15,7 @@ interface Props {
   h: number;
   format: Format;
   watermark: boolean;
+  docImage?: string;
 }
 
 const PAD = 96;
@@ -49,7 +52,7 @@ function Headline({ text, size, brand, t, st, serifBoost }: { text: string; size
     margin: 0,
     fontFamily: fontStack(font),
     fontWeight: st.head.weight,
-    fontSize: size * (serifBoost && st.head.font === 'Instrument Serif' ? 1.12 : 1),
+    fontSize: size * (serifBoost ? (st.head.font === 'Instrument Serif' ? 1.12 : st.head.font === 'Caveat' ? 1.3 : 1) : 1),
     lineHeight: st.head.leading,
     letterSpacing: st.head.tracking,
     textTransform: st.head.upper ? 'uppercase' : 'none',
@@ -122,9 +125,11 @@ function Curve({ t, w, h }: { t: Theme; w: number; h: number }) {
   );
 }
 
-export function SlideView({ slide, brand, style: st, index, total, w, h, format, watermark }: Props) {
+export function SlideView({ slide, brand, style: st, index, total, w, h, format, watermark, docImage }: Props) {
   const t = st.theme(brand);
   const bodyFont = st.bodyFont ?? resolveBody(brand);
+  const bodyScale = bodyFont === 'Caveat' ? 1.25 : 1;
+  const image = slide.image ?? docImage;
   const isDeck = format === 'deck';
   const padX = isDeck ? 140 : PAD;
   const contentW = w - padX * 2;
@@ -149,7 +154,7 @@ export function SlideView({ slide, brand, style: st, index, total, w, h, format,
   })();
 
   const body = slide.body ? (
-    <p style={{ margin: 0, fontFamily: fontStack(bodyFont), fontSize: isDeck ? 40 : 42, lineHeight: 1.35, color: t.muted === t.fg ? t.fg : t.fg, opacity: 0.78, maxWidth: isDeck ? 1100 : '100%', textWrap: 'pretty' as CSSProperties['textWrap'] }}>
+    <p style={{ margin: 0, fontFamily: fontStack(bodyFont), fontSize: (isDeck ? 40 : 42) * bodyScale, lineHeight: 1.35, color: t.muted === t.fg ? t.fg : t.fg, opacity: 0.78, maxWidth: isDeck ? 1100 : '100%', textWrap: 'pretty' as CSSProperties['textWrap'] }}>
       {slide.body}
     </p>
   ) : null;
@@ -186,7 +191,7 @@ export function SlideView({ slide, brand, style: st, index, total, w, h, format,
             {(slide.items ?? []).slice(0, 6).map((it, i) => (
               <div key={i} style={{ display: 'flex', gap: 28, alignItems: 'baseline', padding: '22px 0', borderTop: `2px solid ${t.line}` }}>
                 <span style={{ fontFamily: MONO, fontSize: 26, color: t.accent, fontWeight: 700 }}>{String(i + 1).padStart(2, '0')}</span>
-                <span style={{ fontFamily: fontStack(bodyFont), fontSize: isDeck ? 42 : 44, color: t.fg, lineHeight: 1.2 }}>{it}</span>
+                <span style={{ fontFamily: fontStack(bodyFont), fontSize: (isDeck ? 42 : 44) * bodyScale, color: t.fg, lineHeight: 1.2 }}>{it}</span>
               </div>
             ))}
           </div>
@@ -230,6 +235,70 @@ export function SlideView({ slide, brand, style: st, index, total, w, h, format,
         </div>
       );
       break;
+    case 'compare': {
+      const rows = (slide.items ?? []).map((r) => r.split('||').map((c) => c.trim()));
+      const head = rows[0] ?? ['Before', 'After'];
+      const data = rows.slice(1, 6);
+      const col = (side: 0 | 1): CSSProperties => ({
+        flex: 1,
+        borderRadius: st.id === 'blueprint' || st.id === 'terminal' ? 6 : 24,
+        padding: '34px 34px',
+        background: side === 1 ? t.accent : t.panel,
+        color: side === 1 ? t.accentInk : t.fg,
+        border: side === 0 ? `2px solid ${t.line}` : 'none',
+      });
+      main = (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 36, justifyContent: 'center', flex: 1 }}>
+          {bar}
+          <Headline text={slide.title} size={isDeck ? 88 : 72} brand={brand} t={t} st={st} serifBoost />
+          <div style={{ display: 'flex', gap: 22 }}>
+            {[0, 1].map((side) => (
+              <div key={side} style={col(side as 0 | 1)}>
+                <div style={{ fontFamily: MONO, fontSize: 26, letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 700, opacity: 0.8, marginBottom: 22 }}>{head[side] ?? ''}</div>
+                {data.map((r, i) => (
+                  <div key={i} style={{ fontFamily: fontStack(bodyFont), fontSize: (isDeck ? 36 : 38) * bodyScale, lineHeight: 1.25, padding: '16px 0', borderTop: `2px solid ${side === 1 ? alpha(t.accentInk, 0.3) : t.line}` }}>
+                    {r[side] ?? ''}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+      break;
+    }
+    case 'chart': {
+      const bars = (slide.items ?? [])
+        .map((r) => {
+          const i = r.lastIndexOf(':');
+          return i < 0 ? null : { label: r.slice(0, i).trim(), value: parseFloat(r.slice(i + 1)) };
+        })
+        .filter((b): b is { label: string; value: number } => !!b && Number.isFinite(b.value))
+        .slice(0, 6);
+      const max = Math.max(...bars.map((b) => b.value), 1);
+      const top = bars.reduce((m, b) => (b.value > m ? b.value : m), -Infinity);
+      main = (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 34, justifyContent: 'center', flex: 1 }}>
+          {bar}
+          <Headline text={slide.title} size={isDeck ? 84 : 70} brand={brand} t={t} st={st} serifBoost />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+            {bars.map((b, i) => (
+              <div key={i}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: MONO, fontSize: 26, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+                  <span>{b.label}</span>
+                  <b style={{ color: b.value === top ? t.accent : t.fg }}>{b.value}</b>
+                </div>
+                <div style={{ height: 40, background: t.panel, borderRadius: st.id === 'blueprint' || st.id === 'terminal' ? 2 : 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.max(2, (b.value / max) * 100)}%`, height: '100%', background: b.value === top ? t.accent : alpha(t.fg, 0.55), borderRadius: 'inherit' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          {body}
+        </div>
+      );
+      break;
+    }
     case 'cta':
       main = (
         <div style={{ display: 'flex', flexDirection: 'column', gap, justifyContent: 'center', flex: 1 }}>
@@ -249,7 +318,7 @@ export function SlideView({ slide, brand, style: st, index, total, w, h, format,
 
   return (
     <div style={{ width: w, height: h, position: 'relative', overflow: 'hidden', background: t.bg, color: t.fg, fontFamily: fontStack(bodyFont) }}>
-      {st.background(t, w, h)}
+      {st.background(t, w, h, image, slide)}
       <div style={{ position: 'absolute', inset: 0, padding: `${PAD * 0.8}px ${padX}px ${PAD * 1.1}px`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 56 }}>
           {kickerEl}
@@ -257,13 +326,16 @@ export function SlideView({ slide, brand, style: st, index, total, w, h, format,
         </div>
         {main}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...meta }}>
-          <span>{brand.handle}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }}>
+            {brand.logo ? <img src={brand.logo} alt="" style={{ height: 44, maxWidth: 160, objectFit: 'contain' }} /> : null}
+            {brand.handle}
+          </span>
           <span>{format === 'carousel' && !last ? 'Swipe →' : brand.name}</span>
         </div>
       </div>
       {watermark ? (
         <div style={{ position: 'absolute', left: '50%', bottom: 30, transform: 'translateX(-50%)', fontFamily: MONO, fontSize: 22, letterSpacing: '0.14em', color: '#fffaf2', background: 'rgba(21,18,26,0.82)', padding: '10px 22px', borderRadius: 999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-          Made with kernly · free preview
+          Made with {APP.name} · free preview
         </div>
       ) : null}
     </div>

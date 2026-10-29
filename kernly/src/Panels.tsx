@@ -5,6 +5,8 @@ import { STYLES } from './styles';
 import { Scaled, SlideView } from './SlideView';
 import { RewriteMode, rewrite, writeDeck } from './ai';
 import { getStyle } from './styles';
+import { TEMPLATES, Template } from './templates';
+import { loadImage } from './image';
 
 interface WriteProps {
   doc: Doc;
@@ -102,13 +104,15 @@ export function WritePanel({ doc, brand, plan, active, setActive, patchDoc, patc
             <textarea rows={2} value={slide.title} onChange={(e) => patchSlide(active, { title: e.target.value })} />
             <small>Wrap one word in *stars* to apply your signature.</small>
           </label>
-          {slide.kind !== 'list' && slide.kind !== 'steps' ? (
+          {slide.kind !== 'list' && slide.kind !== 'steps' && slide.kind !== 'compare' && slide.kind !== 'chart' ? (
             <label className="field"><span>{slide.kind === 'quote' ? 'Who said it' : 'Supporting line'}</span>
               <textarea rows={2} value={slide.body ?? ''} onChange={(e) => patchSlide(active, { body: e.target.value })} />
             </label>
           ) : (
-            <label className="field"><span>{slide.kind === 'steps' ? 'Steps (one per line, max 5)' : 'Items (one per line, max 6)'}</span>
+            <label className="field"><span>{slide.kind === 'steps' ? 'Steps (one per line, max 5)' : slide.kind === 'compare' ? 'Rows: first line is the headings' : slide.kind === 'chart' ? 'Bars: Label: number' : 'Items (one per line, max 6)'}</span>
               <textarea rows={5} value={(slide.items ?? []).join('\n')} onChange={(e) => patchSlide(active, { items: e.target.value.split('\n') })} />
+              {slide.kind === 'compare' ? <small>Separate the two sides with ||, e.g. “By hand || With a system”.</small> : null}
+              {slide.kind === 'chart' ? <small>One bar per line, e.g. “Reach: 82”. The biggest bar is highlighted.</small> : null}
             </label>
           )}
           {slide.kind === 'stat' ? (
@@ -121,6 +125,16 @@ export function WritePanel({ doc, brand, plan, active, setActive, patchDoc, patc
             <label className="field"><span>Button text</span>
               <input value={slide.items?.[0] ?? ''} onChange={(e) => patchSlide(active, { items: [e.target.value] })} />
             </label>
+          ) : null}
+          {doc.styleId === 'photo' ? (
+            <div className="field"><span>Photo for this slide</span>
+              <div className="row">
+                <label className="btn sm file">{slide.image ? 'Replace' : 'Upload'}
+                  <input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) { try { patchSlide(active, { image: await loadImage(f) }); } catch (err) { toast((err as Error).message); } } e.target.value = ''; }} />
+                </label>
+                {slide.image ? <button className="btn sm" onClick={() => patchSlide(active, { image: undefined })}>Use deck photo</button> : null}
+              </div>
+            </div>
           ) : null}
           <div className="field"><span>Tone {plan === 'free' ? '· Pro' : ''}</span>
             <div className="chips">
@@ -143,11 +157,22 @@ export function StylePanel({ doc, brand, patchDoc }: StyleProps) {
   return (
     <div className="panel-body">
       <p className="hint">Every style uses your colours, fonts and signature. Tap one to restyle the whole {FORMATS[doc.format].label.toLowerCase()}.</p>
+      {doc.styleId === 'photo' ? (
+        <div className="field"><span>Background photo</span>
+          <div className="row">
+            <label className="btn sm file">{doc.image ? 'Replace photo' : 'Upload photo'}
+              <input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) { try { patchDoc({ image: await loadImage(f) }); } catch (err) { alert((err as Error).message); } } e.target.value = ''; }} />
+            </label>
+            {doc.image ? <button className="btn sm" onClick={() => patchDoc({ image: undefined })}>Remove</button> : null}
+          </div>
+          <small>Used on every slide. Portrait photos with a calm area for text work best.</small>
+        </div>
+      ) : null}
       <div className="style-grid">
         {STYLES.map((s) => (
           <button key={s.id} className={'style-card' + (doc.styleId === s.id ? ' on' : '')} onClick={() => patchDoc({ styleId: s.id })}>
             <Scaled w={f.w} h={f.h}>
-              <SlideView slide={sample} brand={brand} style={getStyle(s.id)} index={0} total={doc.slides.length} w={f.w} h={f.h} format={doc.format} watermark={false} />
+              <SlideView slide={sample} brand={brand} style={getStyle(s.id)} index={0} total={doc.slides.length} w={f.w} h={f.h} format={doc.format} watermark={false} docImage={doc.image} />
             </Scaled>
             <b>{s.name}</b>
             <small>{s.blurb}</small>
@@ -185,6 +210,16 @@ export function BrandPanel({ brands, brand, patch, select, add, toast }: BrandPr
       <div className="row">
         <label className="field grow"><span>Name</span><input value={brand.name} onChange={(e) => patch({ name: e.target.value })} /></label>
         <label className="field grow"><span>Handle</span><input value={brand.handle} onChange={(e) => patch({ handle: e.target.value })} /></label>
+      </div>
+
+      <div className="field"><span>Logo</span>
+        <div className="row">
+          <label className="btn sm file">{brand.logo ? 'Replace logo' : 'Upload logo'}
+            <input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) { try { patch({ logo: await loadImage(f, 480) }); } catch (err) { toast((err as Error).message); } } e.target.value = ''; }} />
+          </label>
+          {brand.logo ? <><img src={brand.logo} alt="" style={{ height: 32, maxWidth: 90, objectFit: 'contain' }} /><button className="btn sm" onClick={() => patch({ logo: undefined })}>Remove</button></> : null}
+        </div>
+        <small>Shows in the footer of every slide.</small>
       </div>
 
       <div className="field"><span>Start from a palette</span>
@@ -245,6 +280,44 @@ export function BrandPanel({ brands, brand, patch, select, add, toast }: BrandPr
         <pre>{brandDocument(brand)}</pre>
         <button className="btn sm" onClick={() => { navigator.clipboard?.writeText(brandDocument(brand)); toast('Brand document copied.'); }}>Copy</button>
       </div>
+    </div>
+  );
+}
+
+interface TemplatesProps { brand: Brand; doc: Doc; open: (t: Template, topic: string) => void; hasWork: boolean }
+
+export function TemplatesPanel({ brand, doc, open, hasWork }: TemplatesProps) {
+  const [topic, setTopic] = useState('');
+  const cats = ['Carousels', 'Single posts', 'Decks'] as const;
+  return (
+    <div className="panel-body">
+      <label className="field"><span>Your topic (optional)</span>
+        <input value={topic} placeholder="e.g. personal branding" onChange={(e) => setTopic(e.target.value)} />
+        <small>Templates start with your topic and your brand. {hasWork ? 'Opening one replaces the current slides.' : ''}</small>
+      </label>
+      {cats.map((c) => (
+        <div key={c} className="field"><span>{c}</span>
+          <div className="tpl-row">
+            {TEMPLATES.filter((t) => t.category === c).map((t) => {
+              const f = FORMATS[t.format];
+              const slides = t.build(topic, brand);
+              return (
+                <button key={t.id} className="tpl" onClick={() => open(t, topic)}>
+                  <div className="tpl-thumb" style={{ aspectRatio: `${f.w} / ${f.h}` }}>
+                    <Scaled w={f.w} h={f.h}>
+                      <SlideView slide={slides[0]} brand={brand} style={getStyle(t.styleId)} index={0} total={slides.length} w={f.w} h={f.h} format={t.format} watermark={false} docImage={doc.image} />
+                    </Scaled>
+                    {t.isNew ? <i className="new">New</i> : null}
+                    <i className="count">{slides.length} {slides.length === 1 ? 'slide' : 'slides'}</i>
+                  </div>
+                  <b>{t.name}</b>
+                  <small>{t.blurb}</small>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

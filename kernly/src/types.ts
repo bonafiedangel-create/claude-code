@@ -11,10 +11,11 @@ export interface Brand {
   bodyFont: string;
   signature: Signature;
   voice: string;
+  logo?: string;
 }
 
 export type Format = 'carousel' | 'post' | 'deck';
-export type SlideKind = 'cover' | 'point' | 'list' | 'steps' | 'stat' | 'quote' | 'cta';
+export type SlideKind = 'cover' | 'point' | 'list' | 'steps' | 'stat' | 'quote' | 'cta' | 'compare' | 'chart';
 
 export interface Slide {
   kind: SlideKind;
@@ -23,6 +24,7 @@ export interface Slide {
   items?: string[];
   stat?: { value: string; label: string };
   kicker?: string;
+  image?: string;
 }
 
 export interface Doc {
@@ -32,6 +34,7 @@ export interface Doc {
   styleId: string;
   brandId: string;
   slides: Slide[];
+  image?: string;
   updatedAt: number;
 }
 
@@ -50,6 +53,8 @@ export const SLIDE_KINDS: { id: SlideKind; label: string }[] = [
   { id: 'steps', label: 'Steps chart' },
   { id: 'stat', label: 'Stat + curve' },
   { id: 'quote', label: 'Quote' },
+  { id: 'compare', label: 'Compare (A vs B)' },
+  { id: 'chart', label: 'Bar chart' },
   { id: 'cta', label: 'Call to action' },
 ];
 

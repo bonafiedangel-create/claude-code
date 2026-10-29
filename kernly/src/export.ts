@@ -1,4 +1,4 @@
-import { getFontEmbedCSS, toPng } from 'html-to-image';
+import { getFontEmbedCSS, toJpeg, toPng } from 'html-to-image';
 
 function download(href: string, name: string) {
   const a = document.createElement('a');
@@ -9,10 +9,12 @@ function download(href: string, name: string) {
   a.remove();
 }
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'kernly';
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'slides';
 
-async function snap(node: HTMLElement, w: number, h: number, fontCSS: string) {
-  return toPng(node, { width: w, height: h, pixelRatio: 1, cacheBust: true, fontEmbedCSS: fontCSS });
+async function snap(node: HTMLElement, w: number, h: number, fontCSS: string, jpeg = false) {
+  const opts = { width: w, height: h, pixelRatio: 1, cacheBust: true, fontEmbedCSS: fontCSS, backgroundColor: '#ffffff' };
+  // JPEG keeps PDFs small enough to email; PNG stays lossless for images and the ZIP.
+  return jpeg ? toJpeg(node, { ...opts, quality: 0.92 }) : toPng(node, opts);
 }
 
 export async function exportPng(root: HTMLElement, index: number, w: number, h: number, title: string) {
@@ -28,7 +30,7 @@ export async function exportAll(root: HTMLElement, count: number, w: number, h: 
   const nodes = Array.from({ length: count }, (_, i) => root.querySelector<HTMLElement>(`[data-ex="${i}"]`)!);
   const css = await getFontEmbedCSS(nodes[0]);
   const shots: string[] = [];
-  for (const n of nodes) shots.push(await snap(n, w, h, css));
+  for (const n of nodes) shots.push(await snap(n, w, h, css, as === 'pdf'));
 
   if (as === 'zip') {
     const { default: JSZip } = await import('jszip');
@@ -43,7 +45,7 @@ export async function exportAll(root: HTMLElement, count: number, w: number, h: 
   const pdf = new jsPDF({ orientation: w > h ? 'landscape' : 'portrait', unit: 'px', format: [w, h], hotfixes: ['px_scaling'] });
   shots.forEach((s, i) => {
     if (i > 0) pdf.addPage([w, h], w > h ? 'landscape' : 'portrait');
-    pdf.addImage(s, 'PNG', 0, 0, w, h);
+    pdf.addImage(s, 'JPEG', 0, 0, w, h);
   });
   pdf.save(`${slug(title)}.pdf`);
 }

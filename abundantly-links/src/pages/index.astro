@@ -1,0 +1,587 @@
+---
+import { Image } from 'astro:assets';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import Base from '../layouts/Base.astro';
+import { settings, homePicks, links as getLinks, house as getHouse, services as getServices, isAmazon, weekOf, todayET } from '../lib/data';
+import { art, glowFor } from '../lib/art';
+import hero800 from '../assets/portraits/hero-800.webp';
+import hero1600 from '../assets/portraits/hero-1600.webp';
+import hero1200 from '../assets/portraits/hero-1200.webp';
+import heroJpg from '../assets/portraits/hero-800.jpg';
+import founder800 from '../assets/portraits/founder-800.webp';
+import founder1600 from '../assets/portraits/founder-1600.webp';
+import founder1200 from '../assets/portraits/founder-1200.webp';
+import founderJpg from '../assets/portraits/founder-800.jpg';
+import lqip from '../assets/portraits/lqip.json';
+
+const has = (f: string) => existsSync(join(process.cwd(), 'public', f));
+const logoDay = has('brand/olive-crest-horizontal.svg');
+const logoNight = has('brand/olive-crest-horizontal-ivory.svg');
+
+const picks = await homePicks();
+const links = await getLinks();
+const house = await getHouse();
+const services = await getServices();
+const today = todayET();
+const amazon = picks.some(isAmazon);
+const year = new Date().getFullYear();
+const ventures = house.length;
+const marquee = ['No panic', 'No perfection', 'Evidence', 'Experience', 'Economics', 'Tested and kept', 'Living well'];
+const statusLabel = { editorial: '', 'editorial-sample': 'Editorial sample', sponsored: 'Sponsored' } as const;
+const srcset = (...imgs: { src: string; width: number }[]) => imgs.map((i) => `${i.src} ${i.width}w`).join(', ');
+const ext = (u: string) => /^https?:/.test(u);
+---
+
+<Base jsonld>
+  <canvas id="silk" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"></div>
+  <div class="loader" aria-hidden="true">
+    <div class="sun"></div>
+    <p>Good morning.</p>
+  </div>
+
+  <header class="bar">
+    <a class="brand" href="#top">
+      {logoDay ? (
+        <span class="logo">
+          <img class="day" src="/brand/olive-crest-horizontal.svg" alt="" width="140" height="34" />
+          {logoNight && <img class="night-logo" src="/brand/olive-crest-horizontal-ivory.svg" alt="" width="140" height="34" />}
+        </span>
+      ) : (
+        <>
+          <b>ABUNDANTLY</b> <i>by Mari</i>
+        </>
+      )}
+      {logoDay && <span class="sr-only">Abundantly by Mari</span>}
+      <span class="sr-only">, back to top</span>
+    </a>
+    <a class="pill" href="#founder">
+      <span class="dot"></span>Meet Marilène
+    </a>
+  </header>
+
+  <main id="top">
+    <span id="content"></span>
+    <!-- ================= MORNING: ABUNDANTLY ================= -->
+    <section class="hero" aria-labelledby="headline">
+      <div class="wrap">
+        <div>
+          <div class="eyebrow">(01) The art of living well</div>
+          <h1 id="headline">
+            Find the <em>signal</em> beneath the wellness noise.
+          </h1>
+          <p class="lede">
+            An independent editorial guide to wellness, beauty and living well in midlife. Every pick is weighed on three things: evidence,
+            experience and economics.
+          </p>
+          <p class="lede-small">No panic. No perfection. No 27-step morning routine required.</p>
+          <div class="cta-row">
+            <a class="btn btn-solid" data-magnet href="#signal">
+              Get The Weekly Signal{' '}
+              <span class="arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+            <a class="btn btn-ghost" data-magnet href="https://abundantlymari.com">
+              Visit the site{' '}
+              <span class="arrow" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          </div>
+          <div class="meta">
+            <span id="issue">Week of {weekOf()}</span>
+            <span>{settings.signalSchedule}</span>
+          </div>
+        </div>
+        <div class="portrait-stage" id="tiltStage">
+          <div class="halo"></div>
+          <svg class="ring" viewBox="0 0 300 300" aria-hidden="true">
+            <defs>
+              <path id="circ" d="M150,150 m-132,0 a132,132 0 1,1 264,0 a132,132 0 1,1 -264,0" />
+            </defs>
+            <text>
+              <textPath href="#circ">Evidence · Experience · Economics · Evidence · Experience · Economics ·</textPath>
+            </text>
+          </svg>
+          <div class="arch-rule"></div>
+          <div class="arch" id="arch">
+            <picture style={`background-image:url(${lqip.hero})`}>
+              <source type="image/webp" srcset={srcset(hero800, hero1200, hero1600)} sizes="(min-width:900px) 440px, 78vw" />
+              <img
+                src={heroJpg.src}
+                width={heroJpg.width}
+                height={heroJpg.height}
+                alt="Mari, editor of Abundantly, in a grey blazer and white shirt"
+                fetchpriority="high"
+                draggable="false"
+              />
+            </picture>
+          </div>
+          <span class="float-tag t1">Wellness</span>
+          <span class="float-tag t2">Beauty</span>
+          <span class="float-tag t3">Living well</span>
+          <span class="caption">Edited by Mari</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="startHead">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div>
+            <div class="eyebrow">(02) Start here</div>
+            <h2 id="startHead">
+              Everything, <em>in one place.</em>
+            </h2>
+          </div>
+          <p>Tap through to the newsletter, the podcast, the latest issue and the feeds.</p>
+        </div>
+        <ul class="links">
+          {links.map((l, i) => (
+            <li class="reveal">
+              <a href={l.data.url} data-big {...(ext(l.data.url) ? { rel: 'noopener' } : {})}>
+                <span class="num">{String(i + 1).padStart(2, '0')}</span>
+                <span>
+                  <span class="t">
+                    {l.data.title}
+                    {l.data.badge && <span class={`badge ${l.data.highlight ? '' : 'soft'}`}>{l.data.badge}</span>}
+                  </span>
+                  <span class="d">{l.data.description}</span>
+                </span>
+                <span class="go" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="track" id="track">
+        {[...marquee, ...marquee, ...marquee, ...marquee].map((t) => (
+          <span>{t}</span>
+        ))}
+      </div>
+    </div>
+
+    <section class="section" id="picks" aria-labelledby="picksHead">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <div>
+            <div class="eyebrow">(03) Tested and kept</div>
+            <h2 id="picksHead">
+              This week's <em>signal.</em>
+            </h2>
+          </div>
+          <div class="toggle" role="group" aria-label="Choose which picks to show">
+            <button type="button" data-mode="week" aria-pressed="true">
+              Of the week
+            </button>
+            <button type="button" data-mode="month" aria-pressed="false">
+              Of the month
+            </button>
+          </div>
+        </div>
+        <div class="stage" id="stage" role="region" aria-roledescription="carousel" aria-label="Tested and kept picks">
+          <div class="ringset" id="ringset">
+            {picks.map((p, i) => {
+              const d = p.data;
+              const href = d.sample ? '#picks' : `/go/${p.id}`;
+              return (
+                <div
+                  class="card"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`${d.name}, ${d.category}`}
+                  data-period={d.period}
+                  data-from={d.publishFrom ?? ''}
+                  data-until={d.publishUntil ?? ''}
+                  data-slug={p.id}
+                  hidden={!!d.publishFrom && d.publishFrom > today}
+                >
+                  <div class="flip">
+                    <div class="face front">
+                      <div class="art" style={`--glow:${glowFor(i)}`}>
+                        {d.image ? (
+                          <Image
+                            src={d.image}
+                            alt={d.imageAlt || d.name}
+                            widths={[320, 640]}
+                            sizes="250px"
+                            loading="lazy"
+                            draggable="false"
+                          />
+                        ) : (
+                          <Fragment set:html={art(d.category)} />
+                        )}
+                        {d.sample && <span class="sample">Sample</span>}
+                        <span class="verdict">{d.verdict}</span>
+                        {statusLabel[d.status] && (
+                          <span class={`pill-status ${d.status === 'editorial-sample' ? 'soft' : ''}`}>{statusLabel[d.status]}</span>
+                        )}
+                      </div>
+                      <div class="info">
+                        <div class="cat">{d.category}</div>
+                        <h3>{d.name}</h3>
+                        {d.code && (
+                          <div class="code">
+                            Code <b>{d.code}</b>
+                          </div>
+                        )}
+                        <div class="row">
+                          <span class="offer">{d.offer ?? ''}</span>
+                          <a
+                            class="shop"
+                            href={href}
+                            rel="sponsored nofollow noopener"
+                            aria-disabled={d.sample ? 'true' : undefined}
+                            data-track={p.id}
+                          >
+                            Shop{' '}
+                            <span class="arrow" aria-hidden="true">
+                              ↗
+                            </span>
+                            <span class="sr-only"> {d.name}</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="face back">
+                      <div>
+                        <div class="k">Tester's note</div>
+                        <blockquote>“{d.note}”</blockquote>
+                      </div>
+                      <dl>
+                        <dt>Tested</dt>
+                        <dd>{d.tested}</dd>
+                        <dt>From</dt>
+                        <dd>{d.brand}</dd>
+                        {d.offer && (
+                          <>
+                            <dt>Offer</dt>
+                            <dd>{d.offer}</dd>
+                          </>
+                        )}
+                        {d.code && (
+                          <>
+                            <dt>Code</dt>
+                            <dd>
+                              <button type="button" class="copy" data-code={d.code}>
+                                {d.code} · copy
+                              </button>
+                            </dd>
+                          </>
+                        )}
+                      </dl>
+                      <a
+                        class="shop"
+                        href={href}
+                        rel="sponsored nofollow noopener"
+                        aria-disabled={d.sample ? 'true' : undefined}
+                        data-track={p.id}
+                        style="align-self:flex-start"
+                      >
+                        Shop this pick{' '}
+                        <span class="arrow" aria-hidden="true">
+                          ↗
+                        </span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div class="ctrls">
+          <button type="button" class="round" id="prev" aria-label="Previous pick">
+            ←
+          </button>
+          <span class="hint" id="hint" aria-live="polite">
+            Drag to spin · tap to read
+          </span>
+          <button type="button" class="round" id="next" aria-label="Next pick">
+            →
+          </button>
+        </div>
+        <p class="disclose">{settings.disclosure}</p>
+        {amazon && <p class="disclose">As an Amazon Associate, Abundantly earns from qualifying purchases.</p>}
+        <a class="archive-link" href="/picks">
+          All past picks →
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="signal">
+      <div class="wrap">
+        <div class="signal reveal">
+          <div class="stamp" aria-hidden="true"></div>
+          <div>
+            <div class="eyebrow">(04) The Weekly Signal</div>
+            <h2>
+              One useful thing, <em>every Saturday.</em>
+            </h2>
+            <p class="lede">
+              A finding, a product, a question or an experiment, researched and translated for real life. Join and receive the complimentary
+              Wellness Audit.
+            </p>
+          </div>
+          <form class="form" id="signupForm" action="/api/subscribe" method="post" novalidate>
+            <label for="email">Your email</label>
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required />
+            <div class="hp" aria-hidden="true">
+              <label>
+                Leave this empty <input name="website" tabindex="-1" autocomplete="off" />
+              </label>
+            </div>
+            <input type="hidden" name="t" value="" />
+            <button class="btn btn-solid" type="submit" data-magnet>
+              Send me the Signal{' '}
+              <span class="arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+            <p class="note" id="formNote" role="status" aria-live="polite">
+              One email a week. Unsubscribe any time.
+            </p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DUSK ================= -->
+    <section class="dusk" aria-label="Transition to the founder">
+      <div class="sunball" aria-hidden="true"></div>
+      <div class="horizon" aria-hidden="true"></div>
+      <div class="lines">
+        <p>As the light goes down</p>
+        <h2>The desk lamp comes on.</h2>
+        <a href="#founder">
+          Meet the woman behind the work{' '}
+          <span class="chev" aria-hidden="true">
+            ↓
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= NIGHT: MARILÈNE HODGE ================= -->
+    <div class="night" id="founder">
+      <canvas id="motes" aria-hidden="true"></canvas>
+
+      <section class="founder-hero" aria-labelledby="founderName">
+        <div class="wrap">
+          <figure class="frame" id="frame">
+            <div class="pic">
+              <picture style={`background-image:url(${lqip.founder})`}>
+                <source type="image/webp" srcset={srcset(founder800, founder1200, founder1600)} sizes="(min-width:900px) 380px, 76vw" />
+                <img
+                  src={founderJpg.src}
+                  width={founderJpg.width}
+                  height={founderJpg.height}
+                  alt="Portrait of Marilène Hodge in a grey blazer"
+                  loading="lazy"
+                  draggable="false"
+                />
+              </picture>
+            </div>
+            <figcaption class="plate">Marilène Hodge</figcaption>
+          </figure>
+          <div>
+            <div class="eyebrow">(05) After hours · The founder</div>
+            <h2 id="founderName">
+              Marilène <i>Hodge</i>
+            </h2>
+            <p class="line">She builds quiet, well-made brands. Each one stands on its own.</p>
+            <p class="bio">
+              Fourteen years in executive leadership taught her how organizations really run. A childhood between the Pyrenees, Martinique
+              and Guadeloupe, then studies in Pau and Bordeaux, gave her an eye for taste, rhythm and beginning again. Before Abundantly she
+              built a luxury e-commerce brand from the ground up. Today she runs a small house of independent ventures from one desk.
+            </p>
+            <div class="ledger">
+              <div>
+                <b data-count="14">14</b>
+                <span>Years leading</span>
+              </div>
+              <div>
+                <b data-count={ventures}>{ventures}</b>
+                <span>Ventures, one desk</span>
+              </div>
+              <div>
+                <b>FR · EN</b>
+                <span>Working languages</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="houseHead">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <div>
+              <div class="eyebrow">(06) The house</div>
+              <h2 id="houseHead">
+                One owner. <em>Separate brands.</em>
+              </h2>
+            </div>
+            <p>Pull a drawer to open each venture.</p>
+          </div>
+          <div class="catalog" id="catalog">
+            {house.map((h, i) => (
+              <div class={`drawer ${i === 0 ? 'open' : ''}`}>
+                <button class="front" type="button" aria-expanded={i === 0 ? 'true' : 'false'} aria-controls={`slip${i}`}>
+                  <span class="holder">{h.data.numeral}</span>
+                  <span class="nm">
+                    {h.data.name}
+                    <small>{h.data.kind}</small>
+                  </span>
+                  <span class="knob" aria-hidden="true"></span>
+                </button>
+                <div class="slip" id={`slip${i}`}>
+                  <div>
+                    <div class="indexcard">
+                      <p>{h.data.text}</p>
+                      <a href={h.data.url}>
+                        {h.data.cta}{' '}
+                        <span class="arrow" aria-hidden="true">
+                          →
+                        </span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="work" aria-labelledby="workHead">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <div>
+              <div class="eyebrow">(07) Work with her</div>
+              <h2 id="workHead">
+                How brands <em>partner with her.</em>
+              </h2>
+            </div>
+            <p>Handled by Marilène Hodge Media &amp; Partnerships, her commercial office.</p>
+          </div>
+          <div class="services">
+            {services.map((s) => (
+              <article class="svc reveal" data-big>
+                <span class="roman">{s.data.numeral}</span>
+                <h3>{s.data.title}</h3>
+                <p>{s.data.text}</p>
+              </article>
+            ))}
+          </div>
+          <div class="seal-row">
+            <a class="seal" href="#media-kit" aria-label="MH, begin a conversation: request the media kit">
+              <span>MH</span>
+            </a>
+            <div class="contact">
+              <h3>Begin a conversation.</h3>
+              <p>
+                Brand partnerships, media and speaking enquiries.
+                <br />
+                Business line{' '}
+                <a class="tel" href={`tel:+1${settings.businessLine.replace(/\D/g, '')}`}>
+                  {settings.businessLine}
+                </a>
+              </p>
+              <div class="cta-row">
+                <a class="btn btn-candle" data-magnet href="https://marilenehodge.com">
+                  Visit marilenehodge.com{' '}
+                  <span class="arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </a>
+                <a class="btn btn-line" data-magnet href="#media-kit">
+                  Request the media kit{' '}
+                  <span class="arrow" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              </div>
+              <div class="socials">
+                {settings.founderSocials.map((s) => (
+                  <a href={s.url}>{s.label}</a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <form class="mediakit" id="media-kit" action="/api/media-kit" method="post" novalidate aria-labelledby="mkHead">
+            <h3 id="mkHead">Request the media kit</h3>
+            <p>Tell us a little about your brand. The kit and rates come back by email, usually within two business days.</p>
+            <div class="mk-grid">
+              <label>
+                Your name
+                <input name="name" autocomplete="name" required />
+              </label>
+              <label>
+                Brand
+                <input name="brand" autocomplete="organization" required />
+              </label>
+              <label>
+                Email
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+              <label>
+                Budget range
+                <select name="budget">
+                  <option value="">Choose one</option>
+                  <option>Under 2,500</option>
+                  <option>2,500 to 7,500</option>
+                  <option>7,500 to 20,000</option>
+                  <option>20,000 and up</option>
+                  <option>Not sure yet</option>
+                </select>
+              </label>
+              <label class="full">
+                Message<textarea name="message" required></textarea>
+              </label>
+              <div class="hp" aria-hidden="true">
+                <label>
+                  Leave this empty <input name="website" tabindex="-1" autocomplete="off" />
+                </label>
+              </div>
+              <input type="hidden" name="t" value="" />
+            </div>
+            <div class="cta-row">
+              <button class="btn btn-candle" type="submit">
+                Send the request{' '}
+                <span class="arrow" aria-hidden="true">
+                  →
+                </span>
+              </button>
+            </div>
+            <p class="mk-note" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
+      <footer>
+        <div class="wrap">
+          <span>Abundantly by Mari · Marilène Hodge Media &amp; Partnerships · {year}</span>
+          <nav aria-label="Legal">
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms of use</a>
+            <span>© {year} Marilène Hodge</span>
+            <button type="button" id="sunrise">
+              Back to morning ↑
+            </button>
+          </nav>
+        </div>
+      </footer>
+    </div>
+  </main>
+  <script src="../scripts/main.ts"></script>
+</Base>

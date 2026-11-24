@@ -1,0 +1,64 @@
+---
+// The archive: every real pick, grouped by the week it went live, so old links keep earning.
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { settings, isAmazon, todayET } from '../lib/data';
+
+const today = todayET();
+const picks = (await getCollection('picks')).filter((p) => !p.data.sample && (!p.data.publishFrom || p.data.publishFrom <= today));
+const monday = (iso?: string) => {
+  const d = iso ? new Date(iso + 'T12:00:00') : new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+};
+const groups = new Map<string, typeof picks>();
+for (const p of picks) {
+  const k = monday(p.data.publishFrom);
+  groups.set(k, [...(groups.get(k) ?? []), p]);
+}
+const weeks = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+const label = (k: string) => new Date(k + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const status = { editorial: '', 'editorial-sample': ' · Editorial sample', sponsored: ' · Sponsored' } as const;
+---
+
+<Base title="Past picks · Abundantly" description="Every product Abundantly has tested and kept, week by week.">
+  <main class="legal" id="content">
+    <a class="back" href="/#picks">
+      ← Back to this week
+    </a>
+    <h1>
+      Tested and kept, <em>week by week.</em>
+    </h1>
+    {weeks.length === 0 && <p>The archive fills up as the weekly picks go live.</p>}
+    {weeks.map(([k, list]) => (
+      <section>
+        <h2>Week of {label(k)}</h2>
+        <ul>
+          {list.map((p) => (
+            <li>
+              <a href={`/go/${p.id}`} rel="sponsored nofollow noopener">{p.data.name}</a><span>, {p.data.brand}</span>
+              {status[p.data.status]}
+              {p.data.offer && <> · {p.data.offer}</>}
+              {p.data.code && (
+                <>
+                  {' '}
+                  · code <b>{p.data.code}</b>
+                </>
+              )}
+              <br />
+              <i>“{p.data.note}”</i>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+    <p>
+      <small>{settings.disclosure}</small>
+    </p>
+    {picks.some(isAmazon) && (
+      <p>
+        <small>As an Amazon Associate, Abundantly earns from qualifying purchases.</small>
+      </p>
+    )}
+  </main>
+</Base>

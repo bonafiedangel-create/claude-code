@@ -1,0 +1,105 @@
+---
+import '@fontsource/libre-caslon-text/latin-400.css';
+import '@fontsource/libre-caslon-text/latin-400-italic.css';
+import '@fontsource/gentium-plus/latin-400.css';
+import '@fontsource/gentium-plus/latin-400-italic.css';
+import '@fontsource/chivo/latin-400.css';
+import '@fontsource/chivo/latin-500.css';
+import '@fontsource/cormorant-garamond/latin-300.css';
+import '@fontsource/cormorant-garamond/latin-300-italic.css';
+import '@fontsource/cormorant-garamond/latin-400.css';
+import '@fontsource/cormorant-garamond/latin-400-italic.css';
+import '@fontsource/cormorant-garamond/latin-500.css';
+import '../styles/global.css';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import heroOg from '../assets/portraits/hero-1600.jpg';
+import { settings } from '../lib/data';
+
+interface Props {
+  title?: string;
+  description?: string;
+  jsonld?: boolean;
+  noindex?: boolean;
+}
+const {
+  title = 'Abundantly · by Mari',
+  description = 'An independent editorial guide to wellness, beauty and living well in midlife. Tested picks, The Weekly Signal, and Marilène Hodge, the woman behind the work.',
+  jsonld = false,
+  noindex = false,
+} = Astro.props;
+
+const has = (f: string) => existsSync(join(process.cwd(), 'public', f));
+const ogImage = has('brand/share-card.jpg') ? '/brand/share-card.jpg' : heroOg.src;
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const year = new Date().getFullYear();
+
+const sameAsAbundantly = settings.abundantlySocials.map((s) => s.url).filter((u) => u.startsWith('http'));
+const sameAsFounder = settings.founderSocials.map((s) => s.url).filter((u) => u.startsWith('http'));
+const ld = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Abundantly',
+    url: 'https://abundantlymari.com',
+    sameAs: sameAsAbundantly,
+    description: 'An independent editorial guide to wellness, beauty and living well in midlife.',
+    founder: { '@type': 'Person', name: 'Marilène Hodge' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Marilène Hodge',
+    url: 'https://marilenehodge.com',
+    jobTitle: 'Founder',
+    sameAs: ['https://marilenehodge.com', ...sameAsFounder],
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={site + Astro.url.pathname} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow, noai, noimageai' : 'index, follow, noai, noimageai'} />
+    <meta name="tdm-reservation" content="1" />
+    <meta name="tdm-policy" content={site + '/terms'} />
+    <meta name="copyright" content={`© ${year} Marilène Hodge / Abundantly. All rights reserved.`} />
+    <meta name="theme-color" content="#F7EEE5" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Abundantly" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={site + Astro.url.pathname} />
+    <meta property="og:image" content={site + ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {has('brand/favicon.svg') && <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />}
+    {has('brand/favicon.ico') && <link rel="icon" href="/brand/favicon.ico" sizes="any" />}
+    {has('brand/apple-touch-icon.png') && <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />}
+    {jsonld && <script type="application/ld+json" set:html={JSON.stringify(ld)} />}
+    <script is:inline>
+      // Mark that JavaScript runs, and play the sunrise loader only once per visit.
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          if (!sessionStorage.getItem('seen')) {
+            d.classList.add('first-visit');
+            sessionStorage.setItem('seen', '1');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#content">
+      Skip to content
+    </a>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+const year = new Date().getFullYear();
+---
+
+<Base title="Privacy · Abundantly" description="How this page handles your information.">
+  <main class="legal" id="content">
+    <a class="back" href="/">
+      ← Back
+    </a>
+    <h1>Privacy</h1>
+    <p>This page is run by Marilène Hodge Media &amp; Partnerships for Abundantly. We keep it simple and collect as little as we can.</p>
+    <h2>What we collect</h2>
+    <ul>
+      <li>
+        <b>The Weekly Signal.</b> If you sign up, your email address is stored with our newsletter provider, Klaviyo, so we can send the
+        newsletter and the complimentary Wellness Audit. Every email has an unsubscribe link.
+      </li>
+      <li>
+        <b>Media kit requests.</b> If you send the form, we receive your name, brand, email, budget range and message by email, and use them
+        only to reply.
+      </li>
+      <li>
+        <b>Visits.</b> We use Vercel Web Analytics, which counts page views without cookies and without identifying you.
+      </li>
+      <li>
+        <b>Shop clicks.</b> When you tap Shop, we count the click for that product (no personal details) before sending you to the brand or
+        retailer.
+      </li>
+    </ul>
+    <h2>Cookies</h2>
+    <p>
+      This page sets no advertising or tracking cookies. Retailers and affiliate networks you visit after tapping Shop have their own
+      policies and may set cookies to credit the referral.
+    </p>
+    <h2>Affiliate links</h2>
+    <p>Some links are affiliate links, so Abundantly may earn a small commission at no cost to you.</p>
+    <h2>Your choices</h2>
+    <p>
+      You can unsubscribe at any time, or ask us to delete what we hold about you, through the contact details at{' '}
+      <a href="https://marilenehodge.com">marilenehodge.com</a>.
+    </p>
+    <p>
+      <small>© {year} Marilène Hodge / Abundantly</small>
+    </p>
+  </main>
+</Base>

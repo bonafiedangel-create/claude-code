@@ -1,0 +1,115 @@
+---
+// Private click stats. Password = the STATS_PASSWORD setting in Vercel.
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { redis } from '../lib/store';
+
+export const prerender = false;
+
+const pass = import.meta.env.STATS_PASSWORD;
+const hash = async (s: string) => {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('abundantly:' + s));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+};
+let error = '';
+if (Astro.request.method === 'POST' && pass) {
+  const form = await Astro.request.formData();
+  if (form.get('password') === pass) {
+    Astro.cookies.set('stats', await hash(pass), {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/stats',
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return Astro.redirect('/stats', 303);
+  }
+  error = 'That password is not right.';
+}
+const authed = !!pass && Astro.cookies.get('stats')?.value === (await hash(pass));
+
+type Row = [string, number];
+let byPick: Row[] = [],
+  byNetwork: Row[] = [],
+  weeks: { week: string; rows: Row[]; total: number }[] = [];
+const names = Object.fromEntries((await getCollection('picks')).map((p) => [p.id, p.data.name]));
+if (authed && redis) {
+  const sort = (o: Record<string, unknown> | null) =>
+    Object.entries(o ?? {})
+      .map(([k, v]) => [k, Number(v)] as Row)
+      .sort((a, b) => b[1] - a[1]);
+  byPick = sort(await redis.hgetall('clicks:pick'));
+  byNetwork = sort(await redis.hgetall('clicks:network'));
+  const wk = ((await redis.smembers('clicks:weeks')) as string[]).sort().reverse().slice(0, 12);
+  for (const w of wk) {
+    const rows = sort(await redis.hgetall(`clicks:week:${w}`));
+    weeks.push({ week: w, rows, total: rows.reduce((s, r) => s + r[1], 0) });
+  }
+}
+---
+
+<Base title="Stats · Abundantly" noindex>
+  <main class="legal" id="content">
+    <a class="back" href="/">
+      ← Back to the page
+    </a>
+    <h1>Shop clicks</h1>
+    {!pass && (
+      <p>
+        Set a <b>STATS_PASSWORD</b> in Vercel (Settings › Environment Variables) to open this page.
+      </p>
+    )}
+    {pass && !authed && (
+      <form method="post" class="form" style="max-width:360px">
+        <label for="pw">Password</label>
+        <input id="pw" name="password" type="password" autocomplete="current-password" required />
+        <button class="btn btn-solid" type="submit">
+          Open stats
+        </button>
+        {error && <p class="note">{error}</p>}
+      </form>
+    )}
+    {authed && !redis && (
+      <p>Click counting is not connected yet. Add the free Upstash Redis integration in Vercel (Storage › Upstash) and redeploy.</p>
+    )}
+    {authed && redis && (
+      <>
+        <h2>By pick, all time</h2>
+        {byPick.length ? (
+          <ul>
+            {byPick.map(([k, v]) => (
+              <li>
+                {names[k] ?? k}: <b>{v}</b>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No clicks yet.</p>
+        )}
+        <h2>By network</h2>
+        <ul>
+          {byNetwork.map(([k, v]) => (
+            <li>
+              {k}: <b>{v}</b>
+            </li>
+          ))}
+        </ul>
+        <h2>By week</h2>
+        {weeks.map((w) => (
+          <>
+            <p>
+              <b>{w.week}</b> · {w.total} clicks
+            </p>
+            <ul>
+              {w.rows.map(([k, v]) => (
+                <li>
+                  {names[k] ?? k}: {v}
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </>
+    )}
+  </main>
+</Base>

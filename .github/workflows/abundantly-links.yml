@@ -1,0 +1,39 @@
+name: Abundantly links · build and Lighthouse
+
+on:
+  push:
+    paths: ['abundantly-links/**', '.github/workflows/abundantly-links.yml']
+  pull_request:
+    paths: ['abundantly-links/**']
+  schedule:
+    - cron: '7 10 * * *' # daily, so scheduled picks appear on their day (see HOW-TO-UPDATE.md)
+
+defaults:
+  run:
+    working-directory: abundantly-links
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: abundantly-links/package-lock.json
+      - run: npm ci
+      - name: Build (also checks every pick against the voice rules)
+        run: npm run build
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.15.x autorun
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: abundantly-links/.lighthouseci
+      - name: Rebuild the live site (daily run only)
+        if: github.event_name == 'schedule' && env.DEPLOY_HOOK != ''
+        env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$DEPLOY_HOOK"
